@@ -230,6 +230,15 @@
       100% { transform: rotate(360deg); }
     }
 
+    .error-message {
+      background: #ffebee;
+      color: #c62828;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem;
+      border-left: 4px solid #d32f2f;
+    }
+
     .hidden { display: none !important; }
 
     @media (max-width: 1024px) {
@@ -287,6 +296,8 @@
   </div>
 
   <script>
+    console.log('=== SDIP Dashboard Starting ===');
+
     var currentUser = null;
     var currentEmployee = null;
     var allData = {
@@ -297,28 +308,47 @@
     };
 
     document.addEventListener('DOMContentLoaded', function() {
-      var userStr = sessionStorage.getItem('currentUser');
-      if (!userStr) {
-        window.top.location.href = getBaseUrl();
-        return;
-      }
+      console.log('DOM Content Loaded');
 
       try {
-        currentUser = JSON.parse(userStr);
-        displayUserInfo();
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        window.top.location.href = getBaseUrl();
-        return;
-      }
+        // Get user from sessionStorage
+        var userStr = sessionStorage.getItem('currentUser');
+        console.log('Session user:', userStr);
 
-      loadAllData();
-
-      setInterval(function() {
-        if (!currentEmployee) {
-          refreshData();
+        if (!userStr) {
+          console.error('No user in session - redirecting to login');
+          alert('ไม่พบข้อมูลผู้ใช้ กรุณา Login อีกครั้ง');
+          window.top.location.href = getBaseUrl();
+          return;
         }
-      }, 5 * 60 * 1000);
+
+        try {
+          currentUser = JSON.parse(userStr);
+          console.log('Current user:', currentUser);
+          displayUserInfo();
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+          alert('ข้อมูลผู้ใช้ไม่ถูกต้อง กรุณา Login อีกครั้ง');
+          window.top.location.href = getBaseUrl();
+          return;
+        }
+
+        // Load data
+        console.log('Starting to load data...');
+        loadAllData();
+
+        // Auto-refresh every 5 minutes
+        setInterval(function() {
+          if (!currentEmployee) {
+            console.log('Auto-refresh triggered');
+            refreshData();
+          }
+        }, 5 * 60 * 1000);
+
+      } catch (error) {
+        console.error('Error in DOMContentLoaded:', error);
+        showError('เกิดข้อผิดพลาดในการเริ่มต้นระบบ: ' + error.message);
+      }
     });
 
     function getBaseUrl() {
@@ -326,12 +356,18 @@
     }
 
     function displayUserInfo() {
-      document.getElementById('userName').textContent = currentUser.name + ' (' + currentUser.accessLevel + ')';
+      console.log('Displaying user info');
+      try {
+        document.getElementById('userName').textContent = currentUser.name + ' (' + currentUser.accessLevel + ')';
 
-      if (currentUser.accessLevel === 'User') {
-        setTimeout(function() {
-          selectEmployee(currentUser.username);
-        }, 1000);
+        if (currentUser.accessLevel === 'User') {
+          console.log('User level detected - will auto-select');
+          setTimeout(function() {
+            selectEmployee(currentUser.username);
+          }, 1000);
+        }
+      } catch (error) {
+        console.error('Error displaying user info:', error);
       }
     }
 
@@ -343,46 +379,75 @@
     }
 
     function loadAllData() {
+      console.log('loadAllData called');
       showLoading();
 
-      if (currentUser.accessLevel === 'User') {
-        google.script.run
-          .withSuccessHandler(onDataLoaded)
-          .withFailureHandler(onDataError)
-          .serverGetEmployeeData(currentUser.username);
-      } else {
-        google.script.run
-          .withSuccessHandler(onDataLoaded)
-          .withFailureHandler(onDataError)
-          .serverGetAllData();
+      try {
+        if (currentUser.accessLevel === 'User') {
+          console.log('Loading data for user:', currentUser.username);
+          google.script.run
+            .withSuccessHandler(onDataLoaded)
+            .withFailureHandler(onDataError)
+            .serverGetEmployeeData(currentUser.username);
+        } else {
+          console.log('Loading all data for admin/poweruser');
+          google.script.run
+            .withSuccessHandler(onDataLoaded)
+            .withFailureHandler(onDataError)
+            .serverGetAllData();
+        }
+      } catch (error) {
+        console.error('Error in loadAllData:', error);
+        showError('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.message);
       }
     }
 
     function onDataLoaded(data) {
-      if (!data) {
-        alert('ไม่สามารถโหลดข้อมูลได้');
-        return;
+      console.log('Data loaded successfully:', data);
+
+      try {
+        if (!data) {
+          showError('ไม่สามารถโหลดข้อมูลได้');
+          return;
+        }
+
+        allData = data;
+        console.log('All data stored');
+
+        calculateEmployeeStats();
+        displayEmployeeList();
+        displayCurrentTab();
+        updateLastUpdate();
+
+        console.log('Dashboard updated successfully');
+      } catch (error) {
+        console.error('Error processing data:', error);
+        showError('เกิดข้อผิดพลาดในการประมวลผลข้อมูล: ' + error.message);
       }
-
-      allData = data;
-      console.log('Data loaded:', data);
-
-      calculateEmployeeStats();
-      displayEmployeeList();
-      displayCurrentTab();
-      updateLastUpdate();
     }
 
     function onDataError(error) {
       console.error('Error loading data:', error);
-      alert('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.message);
+      showError('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.message);
+    }
+
+    function showError(message) {
+      var errorHtml = '<div class="error-message"><strong>เกิดข้อผิดพลาด:</strong><br>' + message + '</div>';
+      document.getElementById('employeeList').innerHTML = errorHtml;
+      document.getElementById('backlogTab').innerHTML = errorHtml;
+      document.getElementById('returnTab').innerHTML = errorHtml;
     }
 
     function calculateEmployeeStats() {
-      if (!allData.employees) return;
+      console.log('Calculating employee stats');
+
+      if (!allData.employees || !allData.employees.length) {
+        console.warn('No employees data');
+        return;
+      }
 
       allData.employees.forEach(function(emp) {
-        var username = emp[allData.fields.EMPLOYEE.USERNAME];
+        var username = emp[allData.fields.EMPLOYEE.USERNAME] || emp.username;
         if (!username) return;
 
         var backlogR = countWorkByEmployee(allData.backlog.r, username);
@@ -399,18 +464,21 @@
           totalWork: backlogR + backlogEMS + backlogCOD + returnedR + returnedEMS + returnedCOD
         };
       });
+
+      console.log('Employee stats calculated');
     }
 
     function countWorkByEmployee(dataArray, username) {
       if (!dataArray || !Array.isArray(dataArray)) return 0;
 
       return dataArray.filter(function(item) {
-        var operator = item[allData.fields.WORK_ITEM.OPERATOR];
-        return operator && operator === username;
+        var operator = item[allData.fields.WORK_ITEM.OPERATOR] || item.operator;
+        return operator && operator.toString().trim() === username.toString().trim();
       }).length;
     }
 
     function displayEmployeeList() {
+      console.log('Displaying employee list');
       var container = document.getElementById('employeeList');
 
       if (!allData.employees || allData.employees.length === 0) {
@@ -421,9 +489,9 @@
       var html = '';
 
       allData.employees.forEach(function(emp) {
-        var username = emp[allData.fields.EMPLOYEE.USERNAME];
-        var name = emp[allData.fields.EMPLOYEE.NAME];
-        var zone = emp[allData.fields.EMPLOYEE.PAYMENT_SIDE] || 'ไม่ระบุ';
+        var username = emp[allData.fields.EMPLOYEE.USERNAME] || emp.username;
+        var name = emp[allData.fields.EMPLOYEE.NAME] || emp.name;
+        var zone = emp[allData.fields.EMPLOYEE.PAYMENT_SIDE] || emp.paymentSide || 'ไม่ระบุ';
 
         if (!username) return;
 
@@ -433,9 +501,10 @@
         };
 
         var levelClass = 'level-none';
-        if (stats.backlog.total + stats.returned.total >= 30) levelClass = 'level-high';
-        else if (stats.backlog.total + stats.returned.total >= 15) levelClass = 'level-medium';
-        else if (stats.backlog.total + stats.returned.total >= 1) levelClass = 'level-low';
+        var totalWork = stats.backlog.total + stats.returned.total;
+        if (totalWork >= 30) levelClass = 'level-high';
+        else if (totalWork >= 15) levelClass = 'level-medium';
+        else if (totalWork >= 1) levelClass = 'level-low';
 
         html += '<div class="employee-card ' + levelClass + '" onclick="selectEmployee(\'' + username + '\')">' +
           '<div class="card-header">' +
@@ -464,19 +533,25 @@
       });
 
       container.innerHTML = html;
+      console.log('Employee list displayed');
     }
 
     function selectEmployee(username) {
+      console.log('Selecting employee:', username);
       currentEmployee = username;
 
       var emp = allData.employees.find(function(e) {
-        return e[allData.fields.EMPLOYEE.USERNAME] === username;
+        var empUsername = e[allData.fields.EMPLOYEE.USERNAME] || e.username;
+        return empUsername === username;
       });
 
-      if (!emp) return;
+      if (!emp) {
+        console.warn('Employee not found:', username);
+        return;
+      }
 
-      var name = emp[allData.fields.EMPLOYEE.NAME];
-      var zone = emp[allData.fields.EMPLOYEE.PAYMENT_SIDE] || 'ไม่ระบุ';
+      var name = emp[allData.fields.EMPLOYEE.NAME] || emp.name;
+      var zone = emp[allData.fields.EMPLOYEE.PAYMENT_SIDE] || emp.paymentSide || 'ไม่ระบุ';
 
       document.getElementById('contentTitle').textContent = zone + ' - ' + username;
       document.getElementById('contentSubtitle').textContent = name + ' | ข้อมูลงานส่วนตัว';
@@ -485,6 +560,8 @@
     }
 
     function switchTab(tabName) {
+      console.log('Switching to tab:', tabName);
+
       document.querySelectorAll('.tab').forEach(function(tab) {
         tab.classList.remove('active');
       });
@@ -499,6 +576,8 @@
     }
 
     function displayCurrentTab() {
+      console.log('Displaying current tab');
+
       var activeTab = document.querySelector('.tab.active');
       if (!activeTab) return;
 
@@ -509,67 +588,84 @@
     }
 
     function displayBacklogData() {
+      console.log('Displaying backlog data');
       var container = document.getElementById('backlogTab');
 
-      var dataR = currentEmployee ? filterByEmployee(allData.backlog.r, currentEmployee) : allData.backlog.r;
-      var dataEMS = currentEmployee ? filterByEmployee(allData.backlog.ems, currentEmployee) : allData.backlog.ems;
-      var dataCOD = currentEmployee ? filterByEmployee(allData.backlog.cod, currentEmployee) : allData.backlog.cod;
+      try {
+        var dataR = currentEmployee ? filterByEmployee(allData.backlog.r, currentEmployee) : allData.backlog.r;
+        var dataEMS = currentEmployee ? filterByEmployee(allData.backlog.ems, currentEmployee) : allData.backlog.ems;
+        var dataCOD = currentEmployee ? filterByEmployee(allData.backlog.cod, currentEmployee) : allData.backlog.cod;
 
-      var totalR = dataR.length;
-      var totalEMS = dataEMS.length;
-      var totalCOD = dataCOD.length;
-      var total = totalR + totalEMS + totalCOD;
+        var totalR = dataR ? dataR.length : 0;
+        var totalEMS = dataEMS ? dataEMS.length : 0;
+        var totalCOD = dataCOD ? dataCOD.length : 0;
+        var total = totalR + totalEMS + totalCOD;
 
-      var html = '<div class="stats-grid">' +
-        '<div class="stat-card total"><div class="stat-number total-color">' + total + '</div><div class="stat-label">รวมทั้งหมด</div></div>' +
-        '<div class="stat-card r-type"><div class="stat-number r-color">' + totalR + '</div><div class="stat-label">R (ลงทะเบียน)</div></div>' +
-        '<div class="stat-card ems-type"><div class="stat-number ems-color">' + totalEMS + '</div><div class="stat-label">EMS</div></div>' +
-        '<div class="stat-card cod-type"><div class="stat-number cod-color">' + totalCOD + '</div><div class="stat-label">COD</div></div>' +
-        '</div>';
+        console.log('Backlog totals:', { R: totalR, EMS: totalEMS, COD: totalCOD, Total: total });
 
-      if (total === 0) {
-        html += '<div style="text-align:center; padding:3rem; color:#4caf50; font-size:1.3rem;">ไม่มีงานค้าง</div>';
+        var html = '<div class="stats-grid">' +
+          '<div class="stat-card total"><div class="stat-number total-color">' + total + '</div><div class="stat-label">รวมทั้งหมด</div></div>' +
+          '<div class="stat-card r-type"><div class="stat-number r-color">' + totalR + '</div><div class="stat-label">R (ลงทะเบียน)</div></div>' +
+          '<div class="stat-card ems-type"><div class="stat-number ems-color">' + totalEMS + '</div><div class="stat-label">EMS</div></div>' +
+          '<div class="stat-card cod-type"><div class="stat-number cod-color">' + totalCOD + '</div><div class="stat-label">COD</div></div>' +
+          '</div>';
+
+        if (total === 0) {
+          html += '<div style="text-align:center; padding:3rem; color:#4caf50; font-size:1.3rem;">ไม่มีงานค้าง</div>';
+        }
+
+        container.innerHTML = html;
+      } catch (error) {
+        console.error('Error displaying backlog:', error);
+        container.innerHTML = '<div class="error-message">เกิดข้อผิดพลาดในการแสดงข้อมูลงานค้าง</div>';
       }
-
-      container.innerHTML = html;
     }
 
     function displayReturnData() {
+      console.log('Displaying return data');
       var container = document.getElementById('returnTab');
 
-      var dataR = currentEmployee ? filterByEmployee(allData.returned.r, currentEmployee) : allData.returned.r;
-      var dataEMS = currentEmployee ? filterByEmployee(allData.returned.ems, currentEmployee) : allData.returned.ems;
-      var dataCOD = currentEmployee ? filterByEmployee(allData.returned.cod, currentEmployee) : allData.returned.cod;
+      try {
+        var dataR = currentEmployee ? filterByEmployee(allData.returned.r, currentEmployee) : allData.returned.r;
+        var dataEMS = currentEmployee ? filterByEmployee(allData.returned.ems, currentEmployee) : allData.returned.ems;
+        var dataCOD = currentEmployee ? filterByEmployee(allData.returned.cod, currentEmployee) : allData.returned.cod;
 
-      var totalR = dataR.length;
-      var totalEMS = dataEMS.length;
-      var totalCOD = dataCOD.length;
-      var total = totalR + totalEMS + totalCOD;
+        var totalR = dataR ? dataR.length : 0;
+        var totalEMS = dataEMS ? dataEMS.length : 0;
+        var totalCOD = dataCOD ? dataCOD.length : 0;
+        var total = totalR + totalEMS + totalCOD;
 
-      var html = '<div class="stats-grid">' +
-        '<div class="stat-card total"><div class="stat-number total-color">' + total + '</div><div class="stat-label">รวมทั้งหมด</div></div>' +
-        '<div class="stat-card r-type"><div class="stat-number r-color">' + totalR + '</div><div class="stat-label">R (ลงทะเบียน)</div></div>' +
-        '<div class="stat-card ems-type"><div class="stat-number ems-color">' + totalEMS + '</div><div class="stat-label">EMS</div></div>' +
-        '<div class="stat-card cod-type"><div class="stat-number cod-color">' + totalCOD + '</div><div class="stat-label">COD</div></div>' +
-        '</div>';
+        console.log('Return totals:', { R: totalR, EMS: totalEMS, COD: totalCOD, Total: total });
 
-      if (total === 0) {
-        html += '<div style="text-align:center; padding:3rem; color:#4caf50; font-size:1.3rem;">ไม่มีงานคืน</div>';
+        var html = '<div class="stats-grid">' +
+          '<div class="stat-card total"><div class="stat-number total-color">' + total + '</div><div class="stat-label">รวมทั้งหมด</div></div>' +
+          '<div class="stat-card r-type"><div class="stat-number r-color">' + totalR + '</div><div class="stat-label">R (ลงทะเบียน)</div></div>' +
+          '<div class="stat-card ems-type"><div class="stat-number ems-color">' + totalEMS + '</div><div class="stat-label">EMS</div></div>' +
+          '<div class="stat-card cod-type"><div class="stat-number cod-color">' + totalCOD + '</div><div class="stat-label">COD</div></div>' +
+          '</div>';
+
+        if (total === 0) {
+          html += '<div style="text-align:center; padding:3rem; color:#4caf50; font-size:1.3rem;">ไม่มีงานคืน</div>';
+        }
+
+        container.innerHTML = html;
+      } catch (error) {
+        console.error('Error displaying return:', error);
+        container.innerHTML = '<div class="error-message">เกิดข้อผิดพลาดในการแสดงข้อมูลงานคืน</div>';
       }
-
-      container.innerHTML = html;
     }
 
     function filterByEmployee(dataArray, username) {
       if (!dataArray || !Array.isArray(dataArray)) return [];
 
       return dataArray.filter(function(item) {
-        var operator = item[allData.fields.WORK_ITEM.OPERATOR];
-        return operator && operator === username;
+        var operator = item[allData.fields.WORK_ITEM.OPERATOR] || item.operator;
+        return operator && operator.toString().trim() === username.toString().trim();
       });
     }
 
     function goHome() {
+      console.log('Going home');
       currentEmployee = null;
       document.getElementById('contentTitle').textContent = 'ข้อมูลงานรวม';
       document.getElementById('contentSubtitle').textContent = 'สรุปงานค้างและงานคืนทั้งหมด | อัพเดทล่าสุด: ' + document.getElementById('lastUpdate').textContent;
@@ -582,6 +678,7 @@
     }
 
     function refreshData() {
+      console.log('Refreshing data');
       loadAllData();
     }
 
@@ -596,11 +693,14 @@
         second: '2-digit'
       });
       document.getElementById('lastUpdate').textContent = timeStr;
+      console.log('Last update time set:', timeStr);
     }
 
     function showLoading() {
       document.getElementById('employeeList').innerHTML = '<div class="loading"><div class="spinner"></div><p>กำลังโหลดข้อมูล...</p></div>';
     }
+
+    console.log('=== Dashboard script loaded ===');
   </script>
 </body>
 </html>
