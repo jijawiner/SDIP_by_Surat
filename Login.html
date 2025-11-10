@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base target="_top">
+  <title>Login - SDIP</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #333;
+    }
+
+    .login-container {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      width: 90%;
+      max-width: 400px;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .login-header h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+    .login-header p { font-size: 0.9rem; opacity: 0.9; }
+
+    .login-body { padding: 2rem; }
+
+    .form-group { margin-bottom: 1.5rem; }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.8rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-login:active { transform: translateY(0); }
+    .btn-login:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .alert.show {
+      display: block;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .alert-error { background: #ffebee; color: #c62828; border: 1px solid #ef5350; }
+    .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #66bb6a; }
+
+    .loading {
+      text-align: center;
+      padding: 1rem;
+      display: none;
+    }
+
+    .loading.show { display: block; }
+
+    .spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .login-footer {
+      padding: 1rem 2rem;
+      text-align: center;
+      background: #f8f9fa;
+      font-size: 0.85rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-header">
+      <h1>SDIP</h1>
+      <p>Smart Delivery Insight Platform</p>
+    </div>
+
+    <div class="login-body">
+      <div class="alert alert-error" id="alertBox"></div>
+
+      <div class="loading" id="loadingBox">
+        <div class="spinner"></div>
+        <p style="margin-top: 0.5rem;">กำลังเข้าสู่ระบบ...</p>
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" placeholder="กรุณากรอก Username" required autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="กรุณากรอก Password" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="btn-login" id="btnLogin">เข้าสู่ระบบ</button>
+      </form>
+    </div>
+
+    <div class="login-footer">
+      SDIP v2.0.0 | Developed for Thailand Post
+    </div>
+  </div>
+
+  <script>
+    var isLoading = false;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      sessionStorage.removeItem('currentUser');
+      document.getElementById('username').focus();
+
+      document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        handleLogin();
+      });
+    });
+
+    function handleLogin() {
+      if (isLoading) return;
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!username || !password) {
+        showAlert('กรุณากรอก Username และ Password', 'error');
+        return;
+      }
+
+      showLoading(true);
+      hideAlert();
+
+      google.script.run
+        .withSuccessHandler(onLoginSuccess)
+        .withFailureHandler(onLoginError)
+        .serverLogin(username, password);
+    }
+
+    function onLoginSuccess(result) {
+      showLoading(false);
+
+      if (result.success) {
+        sessionStorage.setItem('currentUser', JSON.stringify(result.user));
+        showAlert('เข้าสู่ระบบสำเร็จ! กำลังเปลี่ยนหน้า...', 'success');
+
+        setTimeout(function() {
+          window.top.location.href = window.location.href.split('?')[0] + '?page=dashboard';
+        }, 1000);
+      } else {
+        showAlert(result.message || 'เข้าสู่ระบบไม่สำเร็จ', 'error');
+      }
+    }
+
+    function onLoginError(error) {
+      showLoading(false);
+      console.error('Login error:', error);
+      showAlert('เกิดข้อผิดพลาดในการเข้าสู่ระบบ: ' + error.message, 'error');
+    }
+
+    function showLoading(show) {
+      isLoading = show;
+      const loadingBox = document.getElementById('loadingBox');
+      const btnLogin = document.getElementById('btnLogin');
+      const loginForm = document.getElementById('loginForm');
+
+      if (show) {
+        loadingBox.classList.add('show');
+        btnLogin.disabled = true;
+        loginForm.style.opacity = '0.5';
+      } else {
+        loadingBox.classList.remove('show');
+        btnLogin.disabled = false;
+        loginForm.style.opacity = '1';
+      }
+    }
+
+    function showAlert(message, type) {
+      const alertBox = document.getElementById('alertBox');
+      alertBox.textContent = message;
+      alertBox.className = 'alert show alert-' + type;
+    }
+
+    function hideAlert() {
+      const alertBox = document.getElementById('alertBox');
+      alertBox.classList.remove('show');
+    }
+  </script>
+</body>
+</html>
