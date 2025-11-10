@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base target="_top">
+  <title>เข้าสู่ระบบ - Smart Delivery Insight</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-container {
+      background: #fff;
+      padding: 2.5rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 420px;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .login-logo {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+
+    .login-header h1 {
+      font-size: 1.8rem;
+      color: #667eea;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    .login-header p {
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #555;
+      font-size: 0.9rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      font-size: 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+
+    .form-input:focus {
+      border-color: #667eea;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+
+    .btn-login:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-login:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .error-message {
+      margin-top: 1rem;
+      padding: 0.8rem;
+      background: #ffebee;
+      color: #c62828;
+      font-weight: 600;
+      border-radius: 8px;
+      display: none;
+      animation: shake 0.4s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    .success-message {
+      margin-top: 1rem;
+      padding: 0.8rem;
+      background: #e8f5e9;
+      color: #2e7d32;
+      font-weight: 600;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .version-info {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e0e0e0;
+      text-align: center;
+      color: #999;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 2rem;
+      }
+
+      .login-header h1 {
+        font-size: 1.5rem;
+      }
+
+      .login-logo {
+        font-size: 3rem;
+      }
+    }
+    
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-header">
+  <div class="login-logo" aria-label="Smart Delivery Insight logo">
+    <img
+      src="data:image/png;base64,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" alt="Thailand Post"
+      alt="Smart Delivery Insight"
+      style="width:200px;height:200px;object-fit:contain;display:block;margin:0 auto;"
+      decoding="async"
+      loading="eager"
+    />
+  </div>
+  <h1>Smart Delivery Insight Postman</h1>
+  <p>AI nextgen 2 Effective Up</p>
+  <p>ระบบตรวจสอบงานค้าง - บันทึกรายงาน ป.301</p>
+</div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label class="form-label" for="username">👤 ชื่อผู้ใช้</label>
+        <input
+          type="text"
+          id="username"
+          class="form-input"
+          placeholder="กรอกชื่อผู้ใช้"
+          autocomplete="username"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">🔒 รหัสผ่าน</label>
+        <input
+          type="password"
+          id="password"
+          class="form-input"
+          placeholder="กรอกรหัสผ่าน"
+          autocomplete="current-password"
+          required
+        >
+      </div>
+
+      <button type="submit" id="loginButton" class="btn-login">
+        เข้าสู่ระบบ
+      </button>
+    </form>
+
+    <div id="errorMessage" class="error-message"></div>
+    <div id="successMessage" class="success-message"></div>
+
+    <div class="version-info">
+      Smart Delivery Insight | Version 2.0.0 (Google Apps Script)<br>
+      Powered by Firebase
+    </div>
+  </div>
+
+  <script>
+    // Login Form Handler
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      var username = document.getElementById('username').value.trim();
+      var password = document.getElementById('password').value;
+      var errorDiv = document.getElementById('errorMessage');
+      var successDiv = document.getElementById('successMessage');
+      var btn = document.getElementById('loginButton');
+
+      // Validate
+      if (!username || !password) {
+        showError('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+        return;
+      }
+
+      // Show loading
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>กำลังตรวจสอบ...';
+      errorDiv.style.display = 'none';
+      successDiv.style.display = 'none';
+
+      // Call server-side function
+      google.script.run
+        .withSuccessHandler(onLoginSuccess)
+        .withFailureHandler(onLoginFailure)
+        .checkLogin(username, password);
+    });
+
+    function onLoginSuccess(result) {
+      var btn = document.getElementById('loginButton');
+      var errorDiv = document.getElementById('errorMessage');
+      var successDiv = document.getElementById('successMessage');
+
+      if (result && result.success) {
+        // Login successful
+        successDiv.textContent = '✅ เข้าสู่ระบบสำเร็จ กำลังโหลด...';
+        successDiv.style.display = 'block';
+        btn.innerHTML = '✅ เข้าสู่ระบบสำเร็จ';
+
+        // Store user data
+        sessionStorage.setItem('currentUser', JSON.stringify({
+          username: result.username,
+          name: result.name,
+          accessLevel: result.accessLevel,
+          paymentSide: result.paymentSide,
+          position: result.position
+        }));
+
+        // Redirect to dashboard
+        setTimeout(function() {
+          google.script.run
+            .withSuccessHandler(function(url) {
+              var dashboardUrl = url + '?page=dashboard&user=' + encodeURIComponent(result.username) + '&role=' + encodeURIComponent(result.accessLevel);
+              // Use window.location.replace() instead of window.top.location.href
+              // This works in sandboxed iframe
+              window.location.replace(dashboardUrl);
+            })
+            .getScriptUrl();
+        }, 500);
+
+      } else {
+        // Login failed
+        showError(result.message || 'เข้าสู่ระบบไม่สำเร็จ');
+        btn.disabled = false;
+        btn.innerHTML = 'เข้าสู่ระบบ';
+      }
+    }
+
+    function onLoginFailure(error) {
+      console.error('Login error:', error);
+      showError('เกิดข้อผิดพลาด: ' + error.message);
+
+      var btn = document.getElementById('loginButton');
+      btn.disabled = false;
+      btn.innerHTML = 'เข้าสู่ระบบ';
+    }
+
+    function showError(message) {
+      var errorDiv = document.getElementById('errorMessage');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
