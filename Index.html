@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base target="_top">
+  <title>SDIP - Smart Delivery Insight Platform</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+
+    /* ===== LOGIN PAGE STYLES ===== */
+    #loginPage {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .login-container {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      width: 90%;
+      max-width: 400px;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .login-header h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+    .login-header p { font-size: 0.9rem; opacity: 0.9; }
+
+    .login-body { padding: 2rem; }
+
+    .form-group { margin-bottom: 1.5rem; }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.8rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-login:active { transform: translateY(0); }
+    .btn-login:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .alert.show {
+      display: block;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .alert-error { background: #ffebee; color: #c62828; border: 1px solid #ef5350; }
+    .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #66bb6a; }
+
+    .loading-inline {
+      text-align: center;
+      padding: 1rem;
+      display: none;
+    }
+
+    .loading-inline.show { display: block; }
+
+    .spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .login-footer {
+      padding: 1rem 2rem;
+      text-align: center;
+      background: #f8f9fa;
+      font-size: 0.85rem;
+      color: #666;
+    }
+
+    /* ===== DASHBOARD PAGE STYLES ===== */
+    #dashboardPage {
+      display: none;
+      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      min-height: 100vh;
+    }
+
+    #dashboardPage.show {
+      display: block;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header h1 { font-size: 1.5rem; font-weight: 700; }
+    .user-info { display: flex; align-items: center; gap: 1rem; }
+
+    .user-badge {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+    }
+
+    .btn:hover { background: rgba(255, 255, 255, 0.3); }
+
+    .main-container {
+      display: flex;
+      max-width: 1400px;
+      margin: 2rem auto;
+      gap: 2rem;
+      padding: 0 2rem;
+    }
+
+    .sidebar {
+      width: 300px;
+      background: #fff;
+      border-radius: 15px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      height: fit-content;
+      position: sticky;
+      top: 100px;
+    }
+
+    .sidebar h2 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 2px solid #e0e0e0;
+      color: #667eea;
+    }
+
+    .employee-list { max-height: 600px; overflow-y: auto; }
+
+    .employee-card {
+      padding: 1rem;
+      margin-bottom: 0.8rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 2px solid transparent;
+      background: #f8f9fa;
+    }
+
+    .employee-card:hover { background: #e3f2fd; transform: translateX(5px); }
+    .employee-card.active { border-color: #667eea; background: #e3f2fd; }
+
+    .employee-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 0.3rem;
+      color: #333;
+    }
+
+    .employee-zone {
+      font-size: 0.8rem;
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+
+    .employee-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .stat-backlog { color: #f57c00; font-weight: 600; }
+    .stat-return { color: #1976d2; font-weight: 600; }
+
+    .badge-green { background: #c8e6c9; color: #2e7d32; padding: 0.2rem 0.5rem; border-radius: 5px; }
+    .badge-orange { background: #ffe0b2; color: #f57c00; padding: 0.2rem 0.5rem; border-radius: 5px; }
+    .badge-red { background: #ffcdd2; color: #c62828; padding: 0.2rem 0.5rem; border-radius: 5px; }
+
+    .content {
+      flex: 1;
+      background: #fff;
+      border-radius: 15px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .content-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .content-title h2 { font-size: 1.5rem; color: #333; margin-bottom: 0.3rem; }
+    .content-subtitle { font-size: 0.9rem; color: #666; }
+
+    .tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .tab {
+      padding: 1rem 2rem;
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #666;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .tab:hover { color: #667eea; }
+    .tab.active { color: #667eea; border-bottom-color: #667eea; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #f5f7fa 0%, #fff 100%);
+      padding: 1.5rem;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      border: 2px solid #e0e0e0;
+      transition: all 0.3s;
+    }
+
+    .stat-card:hover { transform: translateY(-5px); box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1); }
+
+    .stat-card.total { border-color: #9c27b0; }
+    .stat-card.r-type { border-color: #2196f3; }
+    .stat-card.ems-type { border-color: #4caf50; }
+    .stat-card.cod-type { border-color: #ff9800; }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .total-color { color: #9c27b0; }
+    .r-color { color: #2196f3; }
+    .ems-color { color: #4caf50; }
+    .cod-color { color: #ff9800; }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #666;
+      font-weight: 600;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      font-size: 1.1rem;
+      color: #666;
+    }
+
+    .error-message {
+      background: #ffebee;
+      color: #c62828;
+      padding: 1.5rem;
+      border-radius: 10px;
+      border: 2px solid #ef5350;
+      margin: 1rem 0;
+    }
+
+    @media (max-width: 768px) {
+      .main-container { flex-direction: column; }
+      .sidebar { width: 100%; position: static; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!-- ===== LOGIN PAGE ===== -->
+  <div id="loginPage">
+    <div class="login-container">
+      <div class="login-header">
+        <h1>SDIP</h1>
+        <p>Smart Delivery Insight Platform</p>
+      </div>
+
+      <div class="login-body">
+        <div class="alert alert-error" id="alertBox"></div>
+
+        <div class="loading-inline" id="loadingBox">
+          <div class="spinner"></div>
+          <p style="margin-top: 0.5rem;">กำลังเข้าสู่ระบบ...</p>
+        </div>
+
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" placeholder="กรุณากรอก Username" required autocomplete="username">
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="กรุณากรอก Password" required autocomplete="current-password">
+          </div>
+
+          <button type="submit" class="btn-login" id="btnLogin">เข้าสู่ระบบ</button>
+        </form>
+      </div>
+
+      <div class="login-footer">
+        SDIP v2.0.0 | Developed for Thailand Post
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DASHBOARD PAGE ===== -->
+  <div id="dashboardPage">
+    <div class="header">
+      <div class="header-content">
+        <h1>SDIP Dashboard</h1>
+        <div class="user-info">
+          <div class="user-badge" id="userBadge">ผู้ใช้</div>
+          <button class="btn" onclick="refreshData()">🔄 รีเฟรช</button>
+          <button class="btn" onclick="logout()">ออกจากระบบ</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-container">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <h2>รายชื่อพนักงาน</h2>
+        <button class="btn" onclick="goHome()" style="width: 100%; margin-bottom: 1rem; background: #667eea; color: white;">🏠 ดูข้อมูลรวม</button>
+        <div class="employee-list" id="employeeList">
+          <div class="loading"><div class="spinner"></div><p>กำลังโหลด...</p></div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="content">
+        <div class="content-header">
+          <div class="content-title">
+            <h2 id="contentTitle">ข้อมูลงานรวม</h2>
+            <p class="content-subtitle" id="contentSubtitle">สรุปงานค้างและงานคืนทั้งหมด</p>
+          </div>
+          <div style="font-size: 0.85rem; color: #666;">
+            อัพเดทล่าสุด: <span id="lastUpdate">-</span>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('backlog')">งานค้าง (Backlog)</button>
+          <button class="tab" onclick="switchTab('return')">งานคืน (Return)</button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div id="backlogTab" class="tab-content active">
+          <div class="loading"><div class="spinner"></div><p>กำลังโหลดข้อมูล...</p></div>
+        </div>
+
+        <div id="returnTab" class="tab-content">
+          <div class="loading"><div class="spinner"></div><p>กำลังโหลดข้อมูล...</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    console.log('=== SDIP Application Starting ===');
+
+    // Global variables
+    var currentUser = null;
+    var allData = null;
+    var currentEmployee = null;
+    var currentTab = 'backlog';
+
+    // ===== LOGIN FUNCTIONS =====
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM loaded');
+      document.getElementById('username').focus();
+
+      document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        handleLogin();
+      });
+    });
+
+    function handleLogin() {
+      console.log('Handling login');
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!username || !password) {
+        showAlert('กรุณากรอก Username และ Password', 'error');
+        return;
+      }
+
+      showLoading(true);
+      hideAlert();
+
+      console.log('Calling serverLogin...');
+      google.script.run
+        .withSuccessHandler(onLoginSuccess)
+        .withFailureHandler(onLoginError)
+        .serverLogin(username, password);
+    }
+
+    function onLoginSuccess(result) {
+      console.log('Login response:', result);
+      showLoading(false);
+
+      if (result.success) {
+        currentUser = result.user;
+        console.log('Login successful, user:', currentUser);
+
+        showAlert('เข้าสู่ระบบสำเร็จ!', 'success');
+
+        // Switch to dashboard (NO REDIRECT!)
+        setTimeout(function() {
+          showDashboard();
+        }, 500);
+      } else {
+        showAlert(result.message || 'เข้าสู่ระบบไม่สำเร็จ', 'error');
+      }
+    }
+
+    function onLoginError(error) {
+      console.error('Login error:', error);
+      showLoading(false);
+      showAlert('เกิดข้อผิดพลาด: ' + error.message, 'error');
+    }
+
+    function showLoading(show) {
+      const loadingBox = document.getElementById('loadingBox');
+      const btnLogin = document.getElementById('btnLogin');
+      const loginForm = document.getElementById('loginForm');
+
+      if (show) {
+        loadingBox.classList.add('show');
+        btnLogin.disabled = true;
+        loginForm.style.opacity = '0.5';
+      } else {
+        loadingBox.classList.remove('show');
+        btnLogin.disabled = false;
+        loginForm.style.opacity = '1';
+      }
+    }
+
+    function showAlert(message, type) {
+      const alertBox = document.getElementById('alertBox');
+      alertBox.textContent = message;
+      alertBox.className = 'alert show alert-' + type;
+    }
+
+    function hideAlert() {
+      const alertBox = document.getElementById('alertBox');
+      alertBox.classList.remove('show');
+    }
+
+    // ===== DASHBOARD FUNCTIONS =====
+    function showDashboard() {
+      console.log('Showing dashboard for user:', currentUser);
+
+      // Hide login, show dashboard
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('dashboardPage').classList.add('show');
+
+      // Display user info
+      displayUserInfo();
+
+      // Load data
+      loadAllData();
+    }
+
+    function displayUserInfo() {
+      if (!currentUser) return;
+
+      const userName = currentUser.name || currentUser.username;
+      const userLevel = currentUser.accessLevel || 'User';
+      document.getElementById('userBadge').textContent = userName + ' (' + userLevel + ')';
+
+      console.log('User info displayed');
+    }
+
+    function loadAllData() {
+      console.log('Loading all data...');
+      showLoadingState();
+
+      google.script.run
+        .withSuccessHandler(onDataLoaded)
+        .withFailureHandler(onDataError)
+        .getAllDashboardData();
+    }
+
+    function onDataLoaded(data) {
+      console.log('Data loaded:', data);
+
+      try {
+        if (!data) {
+          showError('ไม่สามารถโหลดข้อมูลได้');
+          return;
+        }
+
+        allData = data;
+        console.log('Data stored successfully');
+
+        // Filter data based on user access level
+        if (currentUser.accessLevel === 'User') {
+          console.log('Filtering data for User level');
+          currentEmployee = currentUser.username;
+        }
+
+        calculateEmployeeStats();
+        displayEmployeeList();
+        displayCurrentTab();
+        updateLastUpdate();
+
+        console.log('Dashboard updated successfully');
+      } catch (error) {
+        console.error('Error processing data:', error);
+        showError('เกิดข้อผิดพลาด: ' + error.message);
+      }
+    }
+
+    function onDataError(error) {
+      console.error('Data loading error:', error);
+      showError('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.message);
+    }
+
+    function showError(message) {
+      var errorHtml = '<div class="error-message"><strong>เกิดข้อผิดพลาด:</strong><br>' + message + '</div>';
+      document.getElementById('employeeList').innerHTML = errorHtml;
+      document.getElementById('backlogTab').innerHTML = errorHtml;
+      document.getElementById('returnTab').innerHTML = errorHtml;
+    }
+
+    function showLoadingState() {
+      var loadingHtml = '<div class="loading"><div class="spinner"></div><p>กำลังโหลด...</p></div>';
+      document.getElementById('employeeList').innerHTML = loadingHtml;
+      document.getElementById('backlogTab').innerHTML = loadingHtml;
+      document.getElementById('returnTab').innerHTML = loadingHtml;
+    }
+
+    function calculateEmployeeStats() {
+      console.log('Calculating employee stats');
+
+      if (!allData.employees || !allData.employees.length) {
+        console.warn('No employees data');
+        return;
+      }
+
+      allData.employees.forEach(function(emp) {
+        var username = emp[allData.fields.EMPLOYEE.USERNAME] || emp.username;
+        if (!username) return;
+
+        var backlogR = countWorkByEmployee(allData.backlog.r, username);
+        var backlogEMS = countWorkByEmployee(allData.backlog.ems, username);
+        var backlogCOD = countWorkByEmployee(allData.backlog.cod, username);
+
+        var returnedR = countWorkByEmployee(allData.returned.r, username);
+        var returnedEMS = countWorkByEmployee(allData.returned.ems, username);
+        var returnedCOD = countWorkByEmployee(allData.returned.cod, username);
+
+        emp._stats = {
+          backlog: { r: backlogR, ems: backlogEMS, cod: backlogCOD, total: backlogR + backlogEMS + backlogCOD },
+          returned: { r: returnedR, ems: returnedEMS, cod: returnedCOD, total: returnedR + returnedEMS + returnedCOD },
+          totalWork: backlogR + backlogEMS + backlogCOD + returnedR + returnedEMS + returnedCOD
+        };
+      });
+
+      console.log('Employee stats calculated');
+    }
+
+    function countWorkByEmployee(dataArray, username) {
+      if (!dataArray || !Array.isArray(dataArray)) return 0;
+
+      return dataArray.filter(function(item) {
+        var operator = item[allData.fields.WORK_ITEM.OPERATOR] || item.operator;
+        return operator && operator.toString().trim() === username.toString().trim();
+      }).length;
+    }
+
+    function displayEmployeeList() {
+      console.log('Displaying employee list');
+      var container = document.getElementById('employeeList');
+
+      if (!allData.employees || allData.employees.length === 0) {
+        container.innerHTML = '<div class="loading"><p>ไม่พบข้อมูลพนักงาน</p></div>';
+        return;
+      }
+
+      var html = '';
+
+      allData.employees.forEach(function(emp) {
+        var username = emp[allData.fields.EMPLOYEE.USERNAME] || emp.username;
+        var name = emp[allData.fields.EMPLOYEE.NAME] || emp.name;
+        var zone = emp[allData.fields.EMPLOYEE.PAYMENT_SIDE] || emp.paymentSide || 'ไม่ระบุ';
+
+        if (!username) return;
+
+        var stats = emp._stats || {
+          backlog: { total: 0 },
+          returned: { total: 0 },
+          totalWork: 0
+        };
+
+        var colorClass = 'badge-green';
+        if (stats.totalWork >= 30) colorClass = 'badge-red';
+        else if (stats.totalWork >= 15) colorClass = 'badge-orange';
+
+        html += '<div class="employee-card" onclick="selectEmployee(\'' + username + '\')">' +
+          '<div class="employee-name">' + name + ' <span class="' + colorClass + '">' + stats.totalWork + '</span></div>' +
+          '<div class="employee-zone">โซน: ' + zone + '</div>' +
+          '<div class="employee-stats">' +
+            '<span class="stat-backlog">ค้าง: ' + stats.backlog.total + '</span>' +
+            '<span class="stat-return">คืน: ' + stats.returned.total + '</span>' +
+          '</div>' +
+          '</div>';
+      });
+
+      container.innerHTML = html;
+      console.log('Employee list displayed');
+    }
+
+    function selectEmployee(username) {
+      console.log('Selected employee:', username);
+      currentEmployee = username;
+
+      var emp = allData.employees.find(function(e) {
+        var empUsername = e[allData.fields.EMPLOYEE.USERNAME] || e.username;
+        return empUsername === username;
+      });
+
+      if (emp) {
+        var name = emp[allData.fields.EMPLOYEE.NAME] || emp.name;
+        document.getElementById('contentTitle').textContent = 'ข้อมูลงานของ ' + name;
+        document.getElementById('contentSubtitle').textContent = 'สรุปงานค้างและงานคืนส่วนตัว';
+      }
+
+      document.querySelectorAll('.employee-card').forEach(function(card) {
+        card.classList.remove('active');
+      });
+
+      event.target.closest('.employee-card').classList.add('active');
+
+      displayCurrentTab();
+    }
+
+    function switchTab(tabName) {
+      console.log('Switching to tab:', tabName);
+      currentTab = tabName;
+
+      document.querySelectorAll('.tab').forEach(function(tab) {
+        tab.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-content').forEach(function(content) {
+        content.classList.remove('active');
+      });
+
+      event.target.classList.add('active');
+      document.getElementById(tabName + 'Tab').classList.add('active');
+
+      displayCurrentTab();
+    }
+
+    function displayCurrentTab() {
+      if (currentTab === 'backlog') {
+        displayBacklogData();
+      } else {
+        displayReturnData();
+      }
+    }
+
+    function displayBacklogData() {
+      console.log('Displaying backlog data');
+      var container = document.getElementById('backlogTab');
+
+      try {
+        var dataR = currentEmployee ? filterByEmployee(allData.backlog.r, currentEmployee) : allData.backlog.r;
+        var dataEMS = currentEmployee ? filterByEmployee(allData.backlog.ems, currentEmployee) : allData.backlog.ems;
+        var dataCOD = currentEmployee ? filterByEmployee(allData.backlog.cod, currentEmployee) : allData.backlog.cod;
+
+        var totalR = dataR ? dataR.length : 0;
+        var totalEMS = dataEMS ? dataEMS.length : 0;
+        var totalCOD = dataCOD ? dataCOD.length : 0;
+        var total = totalR + totalEMS + totalCOD;
+
+        console.log('Backlog totals:', { R: totalR, EMS: totalEMS, COD: totalCOD, Total: total });
+
+        var html = '<div class="stats-grid">' +
+          '<div class="stat-card total"><div class="stat-number total-color">' + total + '</div><div class="stat-label">รวมทั้งหมด</div></div>' +
+          '<div class="stat-card r-type"><div class="stat-number r-color">' + totalR + '</div><div class="stat-label">R (ลงทะเบียน)</div></div>' +
+          '<div class="stat-card ems-type"><div class="stat-number ems-color">' + totalEMS + '</div><div class="stat-label">EMS</div></div>' +
+          '<div class="stat-card cod-type"><div class="stat-number cod-color">' + totalCOD + '</div><div class="stat-label">COD</div></div>' +
+          '</div>';
+
+        if (total === 0) {
+          html += '<div style="text-align:center; padding:3rem; color:#4caf50; font-size:1.3rem;">✓ ไม่มีงานค้าง</div>';
+        }
+
+        container.innerHTML = html;
+      } catch (error) {
+        console.error('Error displaying backlog:', error);
+        container.innerHTML = '<div class="error-message">เกิดข้อผิดพลาด: ' + error.message + '</div>';
+      }
+    }
+
+    function displayReturnData() {
+      console.log('Displaying return data');
+      var container = document.getElementById('returnTab');
+
+      try {
+        var dataR = currentEmployee ? filterByEmployee(allData.returned.r, currentEmployee) : allData.returned.r;
+        var dataEMS = currentEmployee ? filterByEmployee(allData.returned.ems, currentEmployee) : allData.returned.ems;
+        var dataCOD = currentEmployee ? filterByEmployee(allData.returned.cod, currentEmployee) : allData.returned.cod;
+
+        var totalR = dataR ? dataR.length : 0;
+        var totalEMS = dataEMS ? dataEMS.length : 0;
+        var totalCOD = dataCOD ? dataCOD.length : 0;
+        var total = totalR + totalEMS + totalCOD;
+
+        console.log('Return totals:', { R: totalR, EMS: totalEMS, COD: totalCOD, Total: total });
+
+        var html = '<div class="stats-grid">' +
+          '<div class="stat-card total"><div class="stat-number total-color">' + total + '</div><div class="stat-label">รวมทั้งหมด</div></div>' +
+          '<div class="stat-card r-type"><div class="stat-number r-color">' + totalR + '</div><div class="stat-label">R (ลงทะเบียน)</div></div>' +
+          '<div class="stat-card ems-type"><div class="stat-number ems-color">' + totalEMS + '</div><div class="stat-label">EMS</div></div>' +
+          '<div class="stat-card cod-type"><div class="stat-number cod-color">' + totalCOD + '</div><div class="stat-label">COD</div></div>' +
+          '</div>';
+
+        if (total === 0) {
+          html += '<div style="text-align:center; padding:3rem; color:#4caf50; font-size:1.3rem;">✓ ไม่มีงานคืน</div>';
+        }
+
+        container.innerHTML = html;
+      } catch (error) {
+        console.error('Error displaying return:', error);
+        container.innerHTML = '<div class="error-message">เกิดข้อผิดพลาด: ' + error.message + '</div>';
+      }
+    }
+
+    function filterByEmployee(dataArray, username) {
+      if (!dataArray || !Array.isArray(dataArray)) return [];
+
+      return dataArray.filter(function(item) {
+        var operator = item[allData.fields.WORK_ITEM.OPERATOR] || item.operator;
+        return operator && operator.toString().trim() === username.toString().trim();
+      });
+    }
+
+    function goHome() {
+      console.log('Going home');
+      currentEmployee = null;
+      document.getElementById('contentTitle').textContent = 'ข้อมูลงานรวม';
+      document.getElementById('contentSubtitle').textContent = 'สรุปงานค้างและงานคืนทั้งหมด';
+
+      document.querySelectorAll('.employee-card').forEach(function(card) {
+        card.classList.remove('active');
+      });
+
+      displayCurrentTab();
+    }
+
+    function refreshData() {
+      console.log('Refreshing data');
+      loadAllData();
+    }
+
+    function updateLastUpdate() {
+      var now = new Date();
+      var timeStr = now.toLocaleString('th-TH', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      document.getElementById('lastUpdate').textContent = timeStr;
+      console.log('Last update time:', timeStr);
+    }
+
+    function logout() {
+      if (confirm('ต้องการออกจากระบบหรือไม่?')) {
+        console.log('Logging out');
+        currentUser = null;
+        allData = null;
+        currentEmployee = null;
+
+        // Hide dashboard, show login
+        document.getElementById('dashboardPage').classList.remove('show');
+        document.getElementById('loginPage').style.display = 'flex';
+
+        // Clear form
+        document.getElementById('loginForm').reset();
+        document.getElementById('username').focus();
+      }
+    }
+
+    console.log('=== SDIP Script Loaded ===');
+  </script>
+</body>
+</html>

@@ -10,16 +10,9 @@
  */
 function doGet(e) {
   try {
-    // ถ้ามี parameter page=dashboard ให้แสดงหน้า dashboard
-    if (e.parameter.page === 'dashboard') {
-      return HtmlService.createHtmlOutputFromFile('Dashboard')
-        .setTitle('SDIP Dashboard')
-        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-    }
-
-    // ถ้าไม่มี parameter หรือไม่ใช่ dashboard ให้แสดงหน้า login
-    return HtmlService.createHtmlOutputFromFile('Login')
-      .setTitle('SDIP Login')
+    // Single Page Application - แสดง Index.html เสมอ (รวม Login + Dashboard)
+    return HtmlService.createHtmlOutputFromFile('Index')
+      .setTitle('SDIP - Smart Delivery Insight Platform')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 
   } catch (error) {

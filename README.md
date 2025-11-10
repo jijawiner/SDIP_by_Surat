@@ -25,8 +25,7 @@ SDIP_by_Surat/
 ├── Auth.gs                # ระบบ Login & Authentication
 ├── DataService.gs         # จัดการข้อมูลจาก Google Sheets
 ├── WebApp.gs              # Web App handlers (doGet + server functions)
-├── Login.html             # หน้า Login
-├── Dashboard.html         # หน้า Dashboard (2 แท็บ: งานค้าง + งานคืน)
+├── Index.html             # หน้าหลัก (Single Page: Login + Dashboard)
 ├── ExportData.gs          # สคริปต์ช่วยเหลือสำหรับ export ข้อมูล
 └── README.md              # คู่มือโปรเจกต์
 ```
@@ -92,7 +91,7 @@ SDIP_by_Surat/
 ### 4. ระบบ Login
 - Login ด้วย Username และ Password
 - ดึงข้อมูลจากชีต SDIPEmployee
-- Session management ด้วย sessionStorage
+- Single Page Application (ไม่มีการ redirect ระหว่างหน้า)
 
 ## 🚀 วิธีการติดตั้ง
 
@@ -120,8 +119,7 @@ SDIP_by_Surat/
 - `ExportData.gs` - (Optional) ช่วยเหลือ export ข้อมูล
 
 **ไฟล์ .html:**
-- `Login.html` - หน้า Login
-- `Dashboard.html` - หน้า Dashboard
+- `Index.html` - หน้าหลัก (รวม Login + Dashboard)
 
 3. คลิก **Save project** (💾)
 
