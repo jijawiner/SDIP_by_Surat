@@ -10,6 +10,14 @@
  */
 function doGet(e) {
   try {
+    // Check for test mode (เพิ่ม ?test=true ใน URL เพื่อเข้าหน้าทดสอบ)
+    if (e && e.parameter && e.parameter.test === 'true') {
+      Logger.log('Serving Test.html for debugging');
+      return HtmlService.createHtmlOutputFromFile('Test')
+        .setTitle('SDIP Test Page')
+        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    }
+
     // Single Page Application - แสดง Index.html เสมอ (รวม Login + Dashboard)
     return HtmlService.createHtmlOutputFromFile('Index')
       .setTitle('SDIP - Smart Delivery Insight Platform')
@@ -34,6 +42,8 @@ function serverLogin(username, password) {
 
 /**
  * ฟังก์ชันสำหรับดึงข้อมูลทั้งหมด
+ * หมายเหตุ: getAllDashboardData() ถูกกำหนดไว้แล้วใน DataService.gs
+ * และสามารถเรียกใช้จาก client ได้โดยตรง (ไม่ต้องมี wrapper function)
  */
 function serverGetAllData() {
   return getAllDashboardData();

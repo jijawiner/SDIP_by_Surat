@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SDIP Test Page</title>
+</head>
+<body>
+  <h1>SDIP Test Page</h1>
+  <p id="status">กำลังทดสอบการเชื่อมต่อ...</p>
+  <hr>
+  <h2>ขั้นตอนการทดสอบ:</h2>
+  <ol id="testSteps"></ol>
+  <hr>
+  <h2>Console Output:</h2>
+  <pre id="console" style="background: #f0f0f0; padding: 10px; max-height: 400px; overflow: auto;"></pre>
+
+  <script>
+    var output = [];
+
+    function log(message) {
+      console.log(message);
+      output.push('[' + new Date().toLocaleTimeString() + '] ' + message);
+      document.getElementById('console').textContent = output.join('\n');
+    }
+
+    function addStep(text, status) {
+      var li = document.createElement('li');
+      li.innerHTML = text + ' - <strong>' + status + '</strong>';
+      li.style.color = status === 'OK' ? 'green' : (status === 'FAIL' ? 'red' : 'orange');
+      document.getElementById('testSteps').appendChild(li);
+    }
+
+    log('=== SDIP Test Started ===');
+    log('Testing google.script.run availability...');
+
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      log('✓ google.script.run is available');
+      addStep('Google Script API', 'OK');
+
+      // Test 1: Call getAllDashboardData
+      log('Calling getAllDashboardData()...');
+      addStep('Calling getAllDashboardData()', 'PENDING');
+
+      google.script.run
+        .withSuccessHandler(function(data) {
+          log('✓ getAllDashboardData() returned successfully');
+          log('Data type: ' + typeof data);
+          log('Data keys: ' + (data ? Object.keys(data).join(', ') : 'null'));
+
+          if (data) {
+            log('employees: ' + (data.employees ? data.employees.length : 'null'));
+            log('backlog: ' + (data.backlog ? 'exists' : 'null'));
+            log('returned: ' + (data.returned ? 'exists' : 'null'));
+            log('fields: ' + (data.fields ? 'exists' : 'null'));
+
+            if (data.error) {
+              log('⚠ Server returned error: ' + data.error);
+              addStep('getAllDashboardData()', 'FAIL - ' + data.error);
+            } else {
+              addStep('getAllDashboardData()', 'OK');
+            }
+          } else {
+            log('✗ Data is null or undefined');
+            addStep('getAllDashboardData()', 'FAIL - returned null');
+          }
+
+          document.getElementById('status').textContent = 'การทดสอบเสร็จสิ้น - ดู Console Output ด้านล่าง';
+          document.getElementById('status').style.color = 'green';
+        })
+        .withFailureHandler(function(error) {
+          log('✗ getAllDashboardData() failed');
+          log('Error: ' + error.message);
+          log('Error stack: ' + (error.stack || 'no stack'));
+          addStep('getAllDashboardData()', 'FAIL - ' + error.message);
+
+          document.getElementById('status').textContent = 'การทดสอบล้มเหลว - ดู Console Output ด้านล่าง';
+          document.getElementById('status').style.color = 'red';
+        })
+        .getAllDashboardData();
+
+    } else {
+      log('✗ google.script.run is NOT available');
+      log('This page must be run from Google Apps Script Web App');
+      addStep('Google Script API', 'FAIL');
+      document.getElementById('status').textContent = 'ไม่สามารถเชื่อมต่อ Google Script API';
+      document.getElementById('status').style.color = 'red';
+    }
+
+    log('=== Test Initialization Complete ===');
+  </script>
+</body>
+</html>
