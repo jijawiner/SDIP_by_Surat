@@ -109,17 +109,43 @@ function getReturnData(type) {
  */
 function getAllDashboardData() {
   try {
+    Logger.log('=== getAllDashboardData called ===');
+
+    Logger.log('Fetching employees...');
+    const employees = getAllEmployees();
+    Logger.log('Employees fetched: ' + employees.length);
+
+    Logger.log('Fetching backlog data...');
+    const backlogR = getBacklogData('R');
+    Logger.log('Backlog R: ' + backlogR.length);
+
+    const backlogEMS = getBacklogData('EMS');
+    Logger.log('Backlog EMS: ' + backlogEMS.length);
+
+    const backlogCOD = getBacklogData('COD');
+    Logger.log('Backlog COD: ' + backlogCOD.length);
+
+    Logger.log('Fetching return data...');
+    const returnR = getReturnData('R');
+    Logger.log('Return R: ' + returnR.length);
+
+    const returnEMS = getReturnData('EMS');
+    Logger.log('Return EMS: ' + returnEMS.length);
+
+    const returnCOD = getReturnData('COD');
+    Logger.log('Return COD: ' + returnCOD.length);
+
     const data = {
-      employees: getAllEmployees(),
+      employees: employees,
       backlog: {
-        r: getBacklogData('R'),
-        ems: getBacklogData('EMS'),
-        cod: getBacklogData('COD')
+        r: backlogR,
+        ems: backlogEMS,
+        cod: backlogCOD
       },
       returned: {
-        r: getReturnData('R'),
-        ems: getReturnData('EMS'),
-        cod: getReturnData('COD')
+        r: returnR,
+        ems: returnEMS,
+        cod: returnCOD
       },
       // Field names สำหรับ client-side ใช้งาน
       fields: {
@@ -145,11 +171,42 @@ function getAllDashboardData() {
       }
     };
 
+    Logger.log('Data structure created successfully');
+    Logger.log('=== getAllDashboardData completed ===');
+
     return data;
 
   } catch (error) {
-    Logger.log('Error in getAllDashboardData: ' + error.message);
-    throw new Error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + error.message);
+    Logger.log('ERROR in getAllDashboardData: ' + error.message);
+    Logger.log('Error stack: ' + error.stack);
+    // Return empty structure instead of throwing
+    return {
+      employees: [],
+      backlog: { r: [], ems: [], cod: [] },
+      returned: { r: [], ems: [], cod: [] },
+      fields: {
+        EMPLOYEE: {
+          USERNAME: 'username',
+          NAME: 'name',
+          PAYMENT_SIDE: 'paymentSide',
+          ACCESS_LEVEL: 'accessLevel',
+          POSITION: 'position'
+        },
+        WORK_ITEM: {
+          BARCODE: 'barcode',
+          OPERATOR: 'operator',
+          RECIPIENT_INFO: 'recipientInfo',
+          SCAN_DATETIME: 'scanDatetime',
+          REASON: 'reason',
+          COD_AMOUNT: 'codAmount',
+          IS_LAZADA: 'isLazada',
+          DAYS_FROM_DEPOSIT: 'daysFromDeposit',
+          DAYS_FROM_DESTINATION: 'daysFromDestination',
+          ATTEMPT_COUNT: 'attemptCount'
+        }
+      },
+      error: error.message
+    };
   }
 }
 

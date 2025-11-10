@@ -602,31 +602,50 @@
     }
 
     function onDataLoaded(data) {
-      console.log('Data loaded:', data);
+      console.log('=== onDataLoaded called ===');
+      console.log('Data received:', data);
 
       try {
         if (!data) {
+          console.error('Data is null or undefined');
           showError('ไม่สามารถโหลดข้อมูลได้');
           return;
         }
 
+        // Check data structure
+        console.log('Data structure:', {
+          hasEmployees: !!data.employees,
+          employeesCount: data.employees ? data.employees.length : 0,
+          hasBacklog: !!data.backlog,
+          hasReturned: !!data.returned,
+          hasFields: !!data.fields
+        });
+
         allData = data;
-        console.log('Data stored successfully');
+        console.log('Data stored in allData');
 
         // Filter data based on user access level
-        if (currentUser.accessLevel === 'User') {
+        if (currentUser && currentUser.accessLevel === 'User') {
           console.log('Filtering data for User level');
           currentEmployee = currentUser.username;
         }
 
+        console.log('Calling calculateEmployeeStats...');
         calculateEmployeeStats();
+
+        console.log('Calling displayEmployeeList...');
         displayEmployeeList();
+
+        console.log('Calling displayCurrentTab...');
         displayCurrentTab();
+
+        console.log('Calling updateLastUpdate...');
         updateLastUpdate();
 
-        console.log('Dashboard updated successfully');
+        console.log('=== Dashboard updated successfully ===');
       } catch (error) {
-        console.error('Error processing data:', error);
+        console.error('Error in onDataLoaded:', error);
+        console.error('Error stack:', error.stack);
         showError('เกิดข้อผิดพลาด: ' + error.message);
       }
     }
@@ -653,8 +672,13 @@
     function calculateEmployeeStats() {
       console.log('Calculating employee stats');
 
-      if (!allData.employees || !allData.employees.length) {
-        console.warn('No employees data');
+      if (!allData || !allData.employees || !allData.employees.length) {
+        console.warn('No allData or employees data');
+        return;
+      }
+
+      if (!allData.backlog || !allData.returned) {
+        console.warn('No backlog or returned data');
         return;
       }
 
@@ -693,8 +717,15 @@
       console.log('Displaying employee list');
       var container = document.getElementById('employeeList');
 
-      if (!allData.employees || allData.employees.length === 0) {
+      if (!allData || !allData.employees || allData.employees.length === 0) {
+        console.warn('No allData or employees to display');
         container.innerHTML = '<div class="loading"><p>ไม่พบข้อมูลพนักงาน</p></div>';
+        return;
+      }
+
+      if (!allData.fields || !allData.fields.EMPLOYEE) {
+        console.error('Missing fields structure');
+        container.innerHTML = '<div class="error-message">ข้อมูลไม่ครบถ้วน กรุณารีเฟรช</div>';
         return;
       }
 
@@ -728,7 +759,7 @@
       });
 
       container.innerHTML = html;
-      console.log('Employee list displayed');
+      console.log('Employee list displayed:', allData.employees.length, 'employees');
     }
 
     function selectEmployee(username) {
@@ -785,6 +816,13 @@
       var container = document.getElementById('backlogTab');
 
       try {
+        // Check if allData exists
+        if (!allData || !allData.backlog) {
+          console.error('allData or allData.backlog is null');
+          container.innerHTML = '<div class="error-message">ไม่พบข้อมูลงานค้าง กรุณารีเฟรชหน้าใหม่</div>';
+          return;
+        }
+
         var dataR = currentEmployee ? filterByEmployee(allData.backlog.r, currentEmployee) : allData.backlog.r;
         var dataEMS = currentEmployee ? filterByEmployee(allData.backlog.ems, currentEmployee) : allData.backlog.ems;
         var dataCOD = currentEmployee ? filterByEmployee(allData.backlog.cod, currentEmployee) : allData.backlog.cod;
@@ -819,6 +857,13 @@
       var container = document.getElementById('returnTab');
 
       try {
+        // Check if allData exists
+        if (!allData || !allData.returned) {
+          console.error('allData or allData.returned is null');
+          container.innerHTML = '<div class="error-message">ไม่พบข้อมูลงานคืน กรุณารีเฟรชหน้าใหม่</div>';
+          return;
+        }
+
         var dataR = currentEmployee ? filterByEmployee(allData.returned.r, currentEmployee) : allData.returned.r;
         var dataEMS = currentEmployee ? filterByEmployee(allData.returned.ems, currentEmployee) : allData.returned.ems;
         var dataCOD = currentEmployee ? filterByEmployee(allData.returned.cod, currentEmployee) : allData.returned.cod;
