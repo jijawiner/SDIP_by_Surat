@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base target="_top">
+  <title>Dashboard - SDIP</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      color: #333;
+      line-height: 1.6;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header h1 { font-size: 1.5rem; font-weight: 700; }
+    .header h1 span { font-size: 0.9rem; opacity: 0.9; font-weight: 400; }
+
+    .user-info { display: flex; align-items: center; gap: 1rem; }
+
+    .user-badge {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .btn:hover { background: rgba(255, 255, 255, 0.3); }
+
+    /* Nav Buttons */
+    .nav-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .nav-btn {
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); }
+    .nav-btn.home { background: linear-gradient(135deg, #4caf50, #66bb6a); color: #fff; }
+    .nav-btn.refresh { background: linear-gradient(135deg, #2196f3, #42a5f5); color: #fff; }
+
+    /* Container */
+    .container {
+      display: flex;
+      max-width: 1400px;
+      margin: 0 auto;
+      gap: 1rem;
+      padding: 1rem;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 30%;
+      max-height: calc(100vh - 180px);
+      overflow-y: auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar h2 {
+      background: linear-gradient(135deg, #6a1b9a, #9c27b0);
+      color: #fff;
+      padding: 1rem;
+      border-radius: 12px 12px 0 0;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .sidebar-content { padding: 1rem; }
+
+    /* Employee Card */
+    .employee-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border-left: 5px solid #ddd;
+    }
+
+    .employee-card:hover { transform: translateX(5px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); }
+    .employee-card.active { border-left-color: #667eea; background: linear-gradient(135deg, #f8f9ff, #fff); }
+    .employee-card.level-high { border-left-color: #d32f2f; }
+    .employee-card.level-medium { border-left-color: #ff9800; }
+    .employee-card.level-low { border-left-color: #4caf50; }
+
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .zone-badge { background: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
+    .employee-username { font-size: 0.8rem; color: #667eea; font-weight: 600; }
+    .employee-name { font-size: 0.9rem; font-weight: 600; color: #333; margin-bottom: 0.6rem; }
+
+    .work-stats { margin-top: 0.5rem; font-size: 0.85rem; }
+    .work-stats table { width: 100%; border-collapse: collapse; }
+    .work-stats th, .work-stats td { border: 1px solid #e0e0e0; padding: 0.4rem 0.3rem; text-align: center; }
+    .work-stats th { background: #f5f5f5; font-weight: 600; font-size: 0.75rem; }
+    .work-stats tr.total-row { border-top: 2px solid #666; background: #f8f8f8; font-weight: 700; }
+
+    .stat-backlog { color: #d32f2f; }
+    .stat-return { color: #1976d2; }
+
+    /* Main Content */
+    .main-content {
+      width: 70%;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .content-header {
+      background: linear-gradient(135deg, #37474f, #546e7a);
+      color: #fff;
+      padding: 1.5rem;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .content-title { font-size: 1.4rem; margin-bottom: 0.5rem; }
+    .content-subtitle { opacity: 0.9; font-size: 0.9rem; }
+
+    /* Tabs */
+    .tabs { display: flex; background: #f8f9fa; border-bottom: 1px solid #dee2e6; }
+
+    .tab {
+      flex: 1;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      font-weight: 600;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab.active { background: #fff; color: #667eea; border-bottom-color: #667eea; }
+    .tab:hover:not(.active) { background: #e9ecef; }
+
+    .tab-content { padding: 2rem; min-height: 400px; }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #fff, #f8f9fa);
+      padding: 1.5rem;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border-left: 4px solid #ddd;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .stat-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); }
+    .stat-card.total { border-left-color: #37474f; }
+    .stat-card.r-type { border-left-color: #d32f2f; }
+    .stat-card.ems-type { border-left-color: #1976d2; }
+    .stat-card.cod-type { border-left-color: #f57c00; }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      line-height: 1;
+    }
+
+    .stat-number.total-color { color: #37474f; }
+    .stat-number.r-color { color: #d32f2f; }
+    .stat-number.ems-color { color: #1976d2; }
+    .stat-number.cod-color { color: #f57c00; }
+
+    .stat-label { color: #666; font-weight: 600; font-size: 0.9rem; }
+
+    /* Loading */
+    .loading { text-align: center; padding: 3rem; }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .hidden { display: none !important; }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .container { flex-direction: column; }
+      .sidebar, .main-content { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-content">
+      <h1>SDIP <span>| ระบบตรวจสอบงานค้าง</span></h1>
+      <div class="user-info">
+        <div class="user-badge" id="userBadge"><span id="userName">Loading...</span></div>
+        <button class="btn" onclick="logout()">ออกจากระบบ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav Buttons -->
+  <div class="nav-buttons">
+    <button class="nav-btn home" onclick="goHome()">โฮม</button>
+    <button class="nav-btn refresh" onclick="refreshData()">รีเฟรช</button>
+  </div>
+
+  <!-- Container -->
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h2>รายชื่อพนักงาน</h2>
+      <div class="sidebar-content" id="employeeList">
+        <div class="loading"><div class="spinner"></div><p>กำลังโหลดข้อมูล...</p></div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="content-header">
+        <div class="content-title" id="contentTitle">ข้อมูลงานรวม</div>
+        <div class="content-subtitle" id="contentSubtitle">
+          สรุปงานค้างและงานคืนทั้งหมด | อัพเดทล่าสุด: <span id="lastUpdate">-</span>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('backlog')">งานค้าง</div>
+        <div class="tab" onclick="switchTab('return')">งานคืน</div>
+      </div>
+
+      <div class="tab-content">
+        <div class="tab-pane active" id="backlogTab">
+          <div class="loading"><div class="spinner"></div><p>กำลังโหลดข้อมูลงานค้าง...</p></div>
+        </div>
+        <div class="tab-pane" id="returnTab">
+          <div class="loading"><div class="spinner"></div><p>กำลังโหลดข้อมูลงานคืน...</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global Variables
+    var currentUser = null;
+    var currentEmployee = null;
+    var allData = {
+      employees: [],
+      backlog: { r: [], ems: [], cod: [] },
+      returned: { r: [], ems: [], cod: [] },
+      fields: {}
+    };
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get user from sessionStorage
+      var userStr = sessionStorage.getItem('currentUser');
+      if (!userStr) {
+        // Not logged in, redirect to login
+        window.top.location.href = getBaseUrl();
+        return;
+      }
+
+      try {
+        currentUser = JSON.parse(userStr);
+        displayUserInfo();
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        window.top.location.href = getBaseUrl();
+        return;
+      }
+
+      // Load all data
+      loadAllData();
+
+      // Auto-refresh every 5 minutes
+      setInterval(function() {
+        if (!currentEmployee) {
+          refreshData();
+        }
+      }, 5 * 60 * 1000);
+    });
+
+    function getBaseUrl() {
+      return window.location.href.split('?')[0];
+    }
+
+    function displayUserInfo() {
+      document.getElementById('userName').textContent = currentUser.name + ' (' + currentUser.accessLevel + ')';
+
+      // If regular user, auto-select their own data
+      if (currentUser.accessLevel === 'User') {
+        setTimeout(function() {
+          selectEmployee(currentUser.username);
+        }, 1000);
+      }
+    }
+
+    function logout() {
+      if (confirm('ต้องการออกจากระบบหรือไม่?')) {
+        sessionStorage.removeItem('currentUser');
+        window.top.location.href = getBaseUrl();
+      }
+    }
+
+    // Load All Data
+    function loadAllData() {
+      showLoading();
+
+      // Determine which data to load based on access level
+      if (currentUser.accessLevel === 'User') {
+        google.script.run
+          .withSuccessHandler(onDataLoaded)
+          .withFailureHandler(onDataError)
+          .serverGetEmployeeData(currentUser.username);
+      } else {
+        google.script.run
+          .withSuccessHandler(onDataLoaded)
+          .withFailureHandler(onDataError)
+          .serverGetAllData();
+      }
+    }
+
+    function onDataLoaded(data) {
+      if (!data) {
+        alert('ไม่สามารถโหลดข้อมูลได้');
+        return;
+      }
+
+      allData = data;
+      console.log('Data loaded:', data);
+
+      // Calculate employee stats
+      calculateEmployeeStats();
+
+      // Display
+      displayEmployeeList();
+      displayCurrentTab();
+      updateLastUpdate();
+    }
+
+    function onDataError(error) {
+      console.error('Error loading data:', error);
+      alert('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.message);
+    }
+
+    function calculateEmployeeStats() {
+      if (!allData.employees) return;
+
+      allData.employees.forEach(function(emp) {
+        var username = emp[allData.fields.EMPLOYEE.USERNAME];
+        if (!username) return;
+
+        // Count backlog
+        var backlogR = countWorkByEmployee(allData.backlog.r, username);
+        var backlogEMS = countWorkByEmployee(allData.backlog.ems, username);
+        var backlogCOD = countWorkByEmployee(allData.backlog.cod, username);
+
+        // Count returned
+        var returnedR = countWorkByEmployee(allData.returned.r, username);
+        var returnedEMS = countWorkByEmployee(allData.returned.ems, username);
+        var returnedCOD = countWorkByEmployee(allData.returned.cod, username);
+
+        emp._stats = {
+          backlog: { r: backlogR, ems: backlogEMS, cod: backlogCOD, total: backlogR + backlogEMS + backlogCOD },
+          returned: { r: returnedR, ems: returnedEMS, cod: returnedCOD, total: returnedR + returnedEMS + returnedCOD },
+          totalWork: backlogR + backlogEMS + backlogCOD + returnedR + returnedEMS + returnedCOD
+        };
+      });
+    }
+
+    function countWorkByEmployee(dataArray, username) {
+      if (!dataArray || !Array.isArray(dataArray)) return 0;
+
+      return dataArray.filter(function(item) {
+        var operator = item[allData.fields.WORK_ITEM.OPERATOR];
+        return operator && operator === username;
+      }).length;
+    }
+
+    // Display Employee List
+    function displayEmployeeList() {
+      var container = document.getElementById('employeeList');
+
+      if (!allData.employees || allData.employees.length === 0) {
+        container.innerHTML = '<div class="loading"><p>ไม่พบข้อมูลพนักงาน</p></div>';
+        return;
+      }
+
+      var html = '';
+
+      allData.employees.forEach(function(emp) {
+        var username = emp[allData.fields.EMPLOYEE.USERNAME];
+        var name = emp[allData.fields.EMPLOYEE.NAME];
+        var zone = emp[allData.fields.EMPLOYEE.PAYMENT_SIDE] || 'ไม่ระบุ';
+
+        if (!username) return;
+
+        var stats = emp._stats || {
+          backlog: { r: 0, ems: 0, cod: 0, total: 0 },
+          returned: { r: 0, ems: 0, cod: 0, total: 0 }
+        };
+
+        var levelClass = 'level-none';
+        if (stats.backlog.total + stats.returned.total >= 30) levelClass = 'level-high';
+        else if (stats.backlog.total + stats.returned.total >= 15) levelClass = 'level-medium';
+        else if (stats.backlog.total + stats.returned.total >= 1) levelClass = 'level-low';
+
+        html += '<div class="employee-card ' + levelClass + '" onclick="selectEmployee(\'' + username + '\')">' +
+          '<div class="card-header">' +
+            '<div class="zone-badge">' + zone + '</div>' +
+            '<div class="employee-username">' + username + '</div>' +
+          '</div>' +
+          '<div class="employee-name">' + name + '</div>' +
+          '<div class="work-stats"><table>' +
+            '<thead><tr><th></th><th>ค้าง</th><th>คืน</th></tr></thead>' +
+            '<tbody>' +
+              '<tr><td style="font-weight:600; text-align:left; padding-left:0.5rem;">R</td>' +
+                '<td class="stat-backlog">' + stats.backlog.r + '</td>' +
+                '<td class="stat-return">' + stats.returned.r + '</td></tr>' +
+              '<tr><td style="font-weight:600; text-align:left; padding-left:0.5rem;">EMS</td>' +
+                '<td class="stat-backlog">' + stats.backlog.ems + '</td>' +
+                '<td class="stat-return">' + stats.returned.ems + '</td></tr>' +
+              '<tr><td style="font-weight:600; text-align:left; padding-left:0.5rem;">COD</td>' +
+                '<td class="stat-backlog">' + stats.backlog.cod + '</td>' +
+                '<td class="stat-return">' + stats.returned.cod + '</td></tr>' +
+              '<tr class="total-row"><td style="font-weight:700; text-align:left; padding-left:0.5rem;">รวม</td>' +
+                '<td class="stat-backlog">' + stats.backlog.total + '</td>' +
+                '<td class="stat-return">' + stats.returned.total + '</td></tr>' +
+            '</tbody>' +
+          '</table></div>' +
+        '</div>';
+      });
+
+      container.innerHTML = html;
+    }
+
+    function selectEmployee(username) {
+      currentEmployee = username;
+
+      var emp = allData.employees.find(function(e) {
+        return e[allData.fields.EMPLOYEE.USERNAME] === username;
+      });
+
+      if (!emp) return;
+
+      var name = emp[allData.fields.EMPLOYEE.NAME];
+      var zone = emp[allData.fields.EMPLOYEE.PAYMENT_SIDE] || 'ไม่ระบุ';
+
+      document.getElementById('contentTitle').textContent = zone + ' - ' + username;
+      document.getElementById('contentSubtitle').textContent = name + ' | ข้อมูลงานส่วนตัว';
+
+      displayCurrentTab();
+    }
+
+    // Tab Management
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab').forEach(function(tab) {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      document.querySelectorAll('.tab-pane').forEach(function(pane) {
+        pane.classList.remove('active');
+      });
+      document.getElementById(tabName + 'Tab').classList.add('active');
+
+      displayCurrentTab();
+    }
+
+    function displayCurrentTab() {
+      var activeTab = document.querySelector('.tab.active');
+      if (!activeTab) return;
+
+      var tabText = activeTab.textContent;
+
+      if (tabText.includes('งานค้าง')) displayBacklogData();
+      else if (tabText.includes('งานคืน')) displayReturnData();
+    }
+
+    function displayBacklogData() {
+      var container = document.getElementById('backlogTab');
+
+      var dataR = currentEmployee ? filterByEmployee(allData.backlog.r, currentEmployee) : allData.backlog.r;
+      var dataEMS = currentEmployee ? filterByEmployee(allData.backlog.ems, currentEmployee) : allData.backlog.ems;
+      var dataCOD = currentEmployee ? filterByEmployee(allData.backlog.cod, currentEmployee) : allData.backlog.cod;
+
+      var totalR = dataR.length;
+      var totalEMS = dataEMS.length;
+      var totalCOD = dataCOD.length;
+      var total = totalR + totalEMS + totalCOD;
+
+      var html = '<div class="stats-grid">' +
+        '<div class="stat-card total"><div class="stat-number total-color">' + total + '</div><div class="stat-label">รวมทั้งหมด</div></div>' +
+        '<div class="stat-card r-type"><div class="stat-number r-color">' + totalR + '</div><div class="stat-label">R (ลงทะเบียน)</div></div>' +
+        '<div class="stat-card ems-type"><div class="stat-number ems-color">' + totalEMS + '</div><div class="stat-label">EMS</div></div>' +
+        '<div class="stat-card cod-type"><div class="stat-number cod-color">' + totalCOD + '</div><div class="stat-label">COD</div></div>' +
+        '</div>';
+
+      if (total === 0) {
+        html += '<div style="text-align:center; padding:3rem; color:#4caf50; font-size:1.3rem;">ไม่มีงานค้าง</div>';
+      }
+
+      container.innerHTML = html;
+    }
+
+    function displayReturnData() {
+      var container = document.getElementById('returnTab');
+
+      var dataR = currentEmployee ? filterByEmployee(allData.returned.r, currentEmployee) : allData.returned.r;
+      var dataEMS = currentEmployee ? filterByEmployee(allData.returned.ems, currentEmployee) : allData.returned.ems;
+      var dataCOD = currentEmployee ? filterByEmployee(allData.returned.cod, currentEmployee) : allData.returned.cod;
+
+      var totalR = dataR.length;
+      var totalEMS = dataEMS.length;
+      var totalCOD = dataCOD.length;
+      var total = totalR + totalEMS + totalCOD;
+
+      var html = '<div class="stats-grid">' +
+        '<div class="stat-card total"><div class="stat-number total-color">' + total + '</div><div class="stat-label">รวมทั้งหมด</div></div>' +
+        '<div class="stat-card r-type"><div class="stat-number r-color">' + totalR + '</div><div class="stat-label">R (ลงทะเบียน)</div></div>' +
+        '<div class="stat-card ems-type"><div class="stat-number ems-color">' + totalEMS + '</div><div class="stat-label">EMS</div></div>' +
+        '<div class="stat-card cod-type"><div class="stat-number cod-color">' + totalCOD + '</div><div class="stat-label">COD</div></div>' +
+        '</div>';
+
+      if (total === 0) {
+        html += '<div style="text-align:center; padding:3rem; color:#4caf50; font-size:1.3rem;">ไม่มีงานคืน</div>';
+      }
+
+      container.innerHTML = html;
+    }
+
+    function filterByEmployee(dataArray, username) {
+      if (!dataArray || !Array.isArray(dataArray)) return [];
+
+      return dataArray.filter(function(item) {
+        var operator = item[allData.fields.WORK_ITEM.OPERATOR];
+        return operator && operator === username;
+      });
+    }
+
+    // Utility Functions
+    function goHome() {
+      currentEmployee = null;
+      document.getElementById('contentTitle').textContent = 'ข้อมูลงานรวม';
+      document.getElementById('contentSubtitle').textContent = 'สรุปงานค้างและงานคืนทั้งหมด | อัพเดทล่าสุด: ' + document.getElementById('lastUpdate').textContent;
+
+      // Highlight all employee cards
+      document.querySelectorAll('.employee-card').forEach(function(card) {
+        card.classList.remove('active');
+      });
+
+      displayCurrentTab();
+    }
+
+    function refreshData() {
+      loadAllData();
+    }
+
+    function updateLastUpdate() {
+      var now = new Date();
+      var timeStr = now.toLocaleString('th-TH', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      document.getElementById('lastUpdate').textContent = timeStr;
+    }
+
+    function showLoading() {
+      document.getElementById('employeeList').innerHTML = '<div class="loading"><div class="spinner"></div><p>กำลังโหลดข้อมูล...</p></div>';
+    }
+  </script>
+</body>
+</html>
